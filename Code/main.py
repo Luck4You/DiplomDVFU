@@ -6,9 +6,10 @@ from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.shared import Mm
 from docx.shared import Pt
 import pandas as pd
+import os
 import re
 from docx import Document
-#new
+
 def MakeFMT(cell,
             font_size = 11,
             paragrapg_Align = WD_ALIGN_PARAGRAPH.CENTER,
@@ -97,13 +98,10 @@ def MakeDf():
                                     'TYPECONTROL', 
                                     'OCENKA'])
     df = df[df['DISCNAME'] != "Элективные курсы по физической культуре и спорту"]
-    df['DISCINDEX_STR'] = df['DISCINDEX'].apply(Sort_by_index)  # Создаем новый столбец с строковыми значениями
-    df = df.sort_values(by=['ZACHBOOK', 'DISCINDEX_STR'])  # Сначала сортируем по 'ZACHBOOK', затем по 'DISCINDEX_STR'
-    # Удаляем временный столбец 'DISCINDEX_STR'
+    df['DISCINDEX_STR'] = df['DISCINDEX'].apply(Sort_by_index) 
+    df = df.sort_values(by=['ZACHBOOK', 'DISCINDEX_STR', 'STUDYYEAR', 'POLUGOD'])
     df = df.drop(columns=['DISCINDEX_STR'])
-
-
-    df.to_excel("C:/Users/pavlov.sa/Desktop/Software/Diplom/Test/SortedDataSet.xlsx")
+    
 
 # def SortIndexDisc():
 
@@ -149,6 +147,8 @@ def Sort_by_index(name):
 def MakeZE(old_str):
     startRec = False
     new_str = ""
+    if old_str == "":
+        return ""
     for word in old_str:
         if word == ")": break
         elif startRec: new_str = new_str + word
@@ -175,11 +175,8 @@ def Insert_Str_from (Table, index, disc, ze, mark):
     MakeFMT(cell, 11, WD_ALIGN_PARAGRAPH.LEFT, WD_ALIGN_VERTICAL.BOTTOM, 0, False)
 
 
-def MakeOne():
+def MakeOne(df_student,file_save):
     doc = Document(shablon_path)
-    global df
-
-
 
     index_Table = 0
     DiscType_now = "1"
@@ -196,7 +193,7 @@ def MakeOne():
         if table.cell(0,0).text == "TABL2TABL":
             rightTable = table
     mainTable = leftTable
-    for index, row in df.iterrows():
+    for index, row in df_student.iterrows():
         if row['TYPECONTROL'] == 'Курсовой проект' or row['TYPECONTROL'] == 'Курсовая работа':
             new_row = {'TYPECONTROL':row['TYPECONTROL'],
                        'DISCNAME':row['DISCNAME'],
@@ -262,12 +259,22 @@ def MakeOne():
     
 
     #зе проверка
-    doc.save("C:/Users/pavlov.sa/Desktop/Software/Diplom/Test/TestRDY.docx")
+    doc.save(f"C:/Users/pavlov.sa/Desktop/Software/DiplomDVFU-1/Test/Unmerged/{file_save}")
 
+def MakeAll():
+    global df
+    unique_zachbooks = df['ZACHBOOK'].unique()
+    zk_dfs = {zachbook: df[df['ZACHBOOK'] == zachbook] for zachbook in unique_zachbooks}
+
+
+    for zachbook, df_part in zk_dfs.items():
+        filename = f"{zachbook}.docx"
+        MakeOne(df_part, filename)
+    df.to_excel("C:/Users/pavlov.sa/Desktop/Software/DiplomDVFU-1/Test/SortedDataSet.xlsx")
 
         
-shablon_path = "C:/Users/pavlov.sa/Desktop/Software/Diplom/Shablons/Diplom.docx"
-data_file_path = "C:/Users/pavlov.sa/Desktop/Software/Diplom/Test/DataSet.xlsx"
+shablon_path = "C:/Users/pavlov.sa/Desktop/Software/DiplomDVFU-1/Shablons/Diplom.docx"
+data_file_path = "C:/Users/pavlov.sa/Desktop/Software/DiplomDVFU-1/Test/DataSet.xlsx"
 df = pd.read_excel(data_file_path)
 
 
@@ -330,7 +337,7 @@ main_menu = Menu()
  
 file_menu = Menu()
 file_menu.add_command(label="New", command=MakeDf)
-file_menu.add_command(label="Save", command=MakeOne)
+file_menu.add_command(label="Save", command=MakeAll)
 file_menu.add_command(label="Open")
 file_menu.add_separator()
 file_menu.add_command(label="Exit")
