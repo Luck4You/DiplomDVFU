@@ -6,6 +6,7 @@ def MakeDf(df):
     df['DISCINDEX_STR'] = df['DISCINDEX'].apply(Sort_by_index) 
     df = df.sort_values(by=['ZACHBOOK', 'DISCINDEX_STR', 'STUDYYEAR', 'POLUGOD'])
     df = df.drop(columns=['DISCINDEX_STR'])
+    df.to_excel("SortedDataSet.xlsx")
     return df
 
 def Sort_by_index(name):
@@ -32,7 +33,7 @@ def Sort_by_index(name):
             SumNum += int(element)
         elif element == "ФТД":
             # Если элемент равен "ФТД", присваиваем максимальное значение
-            SumNum = 99999
+            SumNum = 999999
             continue
         else:
             # Обрабатываем различные случаи для других значений
@@ -50,11 +51,11 @@ def Sort_by_index(name):
                 case "П":
                     SumNum += 40000
                 case "Б1":
-                    SumNum += 50000
+                    SumNum += 500000
                 case "Б2":
-                    SumNum += 60000
+                    SumNum += 600000
                 case "Б3":
-                    SumNum += 70000
+                    SumNum += 700000
     
     return SumNum
 
